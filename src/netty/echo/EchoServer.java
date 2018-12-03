@@ -31,6 +31,8 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 /**
@@ -52,9 +54,10 @@ public final class EchoServer {
         }
 
         // Configure the server.
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
-        final EchoServerHandler serverHandler = new EchoServerHandler();
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);//nioEventLoopGroup-2-
+        EventLoopGroup workerGroup = new NioEventLoopGroup(5);//nioEventLoopGroup-3-
+        EventLoopGroup w = new NioEventLoopGroup(4);
+
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -69,12 +72,11 @@ public final class EchoServer {
                          p.addLast(sslCtx.newHandler(ch.alloc()));
                      }
                      //p.addLast(new LoggingHandler(LogLevel.INFO));
-                     p.addLast(serverHandler);
+                     p.addLast(workerGroup, new EchoServerHandler());
                  }
              });
             // Start the server.
             ChannelFuture f = b.bind(PORT).sync();
-
             // Wait until the server socket is closed.
             f.channel().closeFuture().sync();
         } finally {

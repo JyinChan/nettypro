@@ -19,6 +19,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -44,29 +45,30 @@ public class EchoClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
+        System.out.println("active");
         //ctx.writeAndFlush(firstMessage);
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//
-//        }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+
+        }
         System.out.println("read a msg");
-        //ctx.write(msg);
+        ctx.write(msg);
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
-       ctx.flush();
+        System.out.println("complete");
+        ctx.flush();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         // Close the connection when an exception is raised.
-        System.out.println("error test");
         cause.printStackTrace();
         ctx.close();
     }

@@ -17,9 +17,8 @@ package netty.echo;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -28,7 +27,7 @@ import java.nio.charset.Charset;
  * Handler implementation for the echo server.
  */
 @Sharable
-public class EchoServerHandler extends ChannelInboundHandlerAdapter {
+public class EchoServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -40,28 +39,41 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
         System.out.println(new String(temp));
 
-        //new Thread(() -> {
-            for(int i=0 ;i<10000000; i++) {
-                ByteBuf writeBuf = Unpooled.buffer(20);
-                writeBuf.writeCharSequence("00011hello world", Charset.defaultCharset());
-                ctx.write(writeBuf);
-                //ctx.flush();
-                System.out.println(i);
-            }
-        //}).start();
+        System.out.println(Thread.currentThread().getName());
+
+        buf.readerIndex(0);
+
+        new Thread(() -> {
+            ctx.channel().writeAndFlush(buf);
+        }).start();
+
+        try {
+            Thread.sleep(100000);
+        } catch (InterruptedException e) {}
 
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
+        System.out.println("complete");
         ctx.flush();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         // Close the connection when an exception is raised.
-        System.out.println("my error test");
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        System.out.println("write");
+        super.write(ctx, msg, promise);
+    }
+
+    @Override
+    public void read(ChannelHandlerContext ctx) throws Exception {
+        super.read(ctx);
     }
 }
